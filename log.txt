@@ -1,0 +1,354 @@
+# log.txt — development transcript
+# HackerRank Orchestrate 2026, "Buy or Wait?"
+# Built with Claude (Anthropic) as pair engineer. Entries are factual records of
+# what was actually asked, decided, changed and measured.
+
+================================================================================
+PHASE 1 — CHALLENGE ANALYSIS
+================================================================================
+
+PROMPT
+  Analyse the challenge before writing any code. Do not invent requirements.
+  Distinguish HackerRank requirements from recommendations. Produce a 24-hour
+  plan, architecture, tech choice, risks, MVP and AI Judge prep.
+
+DECISION
+  Split the system in two: the model interprets ambiguous evidence, deterministic
+  Python performs every calculation. Reason: six of the seven scored output
+  columns are exact-match or categorical. A sampled number is silently wrong some
+  fraction of the time with no downstream way to detect it.
+
+DECISION
+  Stack: Python 3.11 + stdlib + a hand-rolled tool loop over the Anthropic API.
+  Rejected LangGraph and CrewAI. Reasons: the token/cost report is a graded
+  deliverable and exact accounting is trivial with a thin wrapper; every line
+  must be explainable in the AI Judge interview; the problem needs determinism
+  more than orchestration.
+
+IMPLEMENTATION
+  None. Analysis only.
+
+================================================================================
+PHASE 2A — DATA RECONNAISSANCE
+================================================================================
+
+PROMPT
+  Inspect every file. Identify schemas, relationships, vocabularies, blank
+  amounts and their images, and the exact output conventions. Guess nothing.
+
+IMPLEMENTATION
+  explore.py — 10-section reconnaissance report. NOTES.md — findings.
+
+TEST RESULT
+  9 CSVs, 25,342 events, 275 profiles, 790 payment options, 215 messages,
+  16 images. Every foreign key resolves; zero orphans.
+
+FINDING  Referential integrity is perfect. All 140 foreign-currency events have
+  an exact (event_date, from, to) rate row. No inversion or interpolation needed.
+  REASON: deletes a whole category of risk from the plan.
+
+FINDING  Two different number formats in the labelled output.
+  amount_safe_to_pay strips trailing zeros ("17229139.2").
+  payment_plan pads to 2dp ("620.40" where requested was 620.4).
+  REASON: getting this backwards loses points on exact-match columns.
+
+FINDING  payment_plan uses the literal "none"; earliest_date_for_full_payment
+  uses a BLANK; spending_changes_needed uses the literal "none". Not
+  interchangeable.
+
+FINDING  reduce_to is not a chosen number — it is always the target event's own
+  minimum_allowed_amount. Verified against all three labelled examples
+  (event_989 -> 665950, event_1816 -> 23.50).
+
+FINDING  Status -> method is nearly bijective. affordable_now -> full_payment,
+  affordable_later -> wait, not_affordable -> not_recommended. Only
+  affordable_with_plan branches. All three affordable_with_plan + full_payment
+  rows are exactly the three rows carrying spending changes.
+
+FINDING  The 90-day forecast must be GENERATED. The file contains almost no
+  future-dated events — user_01 has exactly one. balance − minimum − label is
+  never zero, so recurring commitments have to be projected forward.
+
+FINDING  Images: the event description names the line item.
+  image_01 payslip, Total Earnings 4,780,800 vs Net Pay 4,365,000, description
+  "net salary" -> 4,365,000. image_02, Total 200,000 vs Balance Due 100,000,
+  description "outstanding rent balance" -> 100,000.
+  REASON: "take the largest number" or "take the total" is wrong on at least
+  three of the five images inspected by hand.
+
+FINDING  Injection keyword scan over 215 messages: 52 hits, all false positives
+  ("instructions" in payroll prose, "approved" in invoice notices). The real
+  message difficulty is multilingual content: 45 Indonesian (no French).
+
+FINDING  Submission path: output.csv goes in the REPO ROOT. dataset/output.csv
+  is a read-only template. This is in README.md only, not problem_statement.md.
+
+================================================================================
+PHASE 2B — DETERMINISTIC ENGINE + CALIBRATION
+================================================================================
+
+PROMPT
+  Build state reconstruction and a 90-day timeline. Make the recurrence model
+  configurable rather than guessing. Calibrate against the 25 labelled samples.
+  Do not overfit individual requests.
+
+IMPLEMENTATION
+  code/config.py   — every uncertain assumption as a named parameter
+  code/state.py    — typed structures, FX, exclusions, recurrence, timeline
+  code/calibrate.py— parameter sweep + report
+  tests/test_state.py — 45 deterministic tests on synthetic fixtures
+
+TEST RESULT
+  45/45 pass.
+
+TEST RESULT
+  864 configurations swept. 3/25 exact, all three CAPPED (label equals
+  requested_amount, so the clamp hides the forecast). 0/21 informative exact.
+  Best mean symmetric relative error 0.401.
+
+DECISION
+  Changed the error metric mid-run. A plain |pred−exp|/exp is asymmetric and
+  initially ranked a degenerate all-zero model first. Switched to dividing by the
+  mean of the two values, bounding the metric at 2.0 in both directions.
+
+DECISION
+  Treated 0/864 as a FALSIFICATION, not a tuning failure. Stopped sweeping and
+  went looking for the worst single sample instead.
+
+FINDING (the pivotal one)
+  request_05 — one of only six samples with no message and no image, so nothing
+  could be hiding in the evidence layer. Predicted 15,488.00 against a label of
+  737.00.
+  Its last salary credit is described "Final employer payroll". Every prior month
+  reads "Payroll credit". Nothing in status, event_type, flexibility or any other
+  structured column marks the stream as ended.
+  Suppressing projected income for that one sample: 15,488.00 -> 0.00.
+  REASON: income continuation is SEMANTIC. It is exactly the judgement the agent
+  layer exists to make, which retroactively validates the Phase 1 architecture.
+
+FINDING  The implied outflow (balance − minimum − label) is a WHOLE NUMBER in 16
+  of 21 informative samples, while most events carry cents and only the fixed
+  commitments are round. Recorded as a lead; not resolved.
+
+================================================================================
+PHASE 3-6 — SEMANTIC LAYER, VISION, SOLVER, VALIDATOR
+================================================================================
+
+PROMPT
+  Implement the semantic layer with a closed enum. Then vision. Then messages.
+  Then the full solver, payment plans, validator, output.csv, docs. Execute
+  autonomously.
+
+IMPLEMENTATION
+  code/evidence.py — income lexicon (39 credit descriptions, a closed
+    vocabulary), message classifier, vision extraction, conflict resolution
+  code/llm.py      — stdlib urllib client, disk cache keyed by
+    sha256(model, purpose, payload), UsageLedger reading response.usage directly
+  code/solve.py    — candidates, 6-level ranking, spending changes
+  code/explain.py  — fact-pack explanation + deterministic fallback
+  code/validate.py — schema, invariants, plan re-simulation, repair
+  code/main.py     — pipeline, output.csv, usage report
+  code/sweep.py    — scores TOTAL OUTPUT CELLS, not just amount_safe_to_pay
+  code/verified_image_amounts.json — all 16 extractions, hand-verified
+
+DECISION
+  Built sweep.py because calibrate.py optimises one column while six are scored.
+  A forecast can be numerically off and still produce the right decision, so the
+  objective that matches the scoring is total cells.
+
+TEST RESULT
+  First integrated run: 103/150 cells.
+
+FINDING + IMPLEMENTATION (second pivotal fix)
+  Salary streams were grouped by description. The dataset RENAMES a payroll
+  stream as the user's situation changes ("Prorated first salary" ->
+  "Next confirmed salary"; "Payroll credit" -> "Final employer payroll" ->
+  "New employer payroll"). Description-grouping splits one stream into fragments,
+  each below the occurrence threshold, so the user's income silently vanishes
+  from the forecast.
+  Added config.income_group_by_category (default True) and allowed the scheduled
+  "Next confirmed salary" row to anchor the forward projection.
+
+TEST RESULT
+  Sweep over 288 configs on total cells: best 110/150 with category grouping on.
+
+TEST RESULT
+  Finer sweep, 324 configs: 113/150 at recurrence_lookback_days=150,
+  recurrence_min_occurrences=3, amount modes median/median,
+  monthly_day_of_month cadence.
+  Per column: method 25/25, status 22/25, plan 22/25, changes 22/25,
+  earliest 18/25, safe 4/25.
+
+DECISION
+  Stopped tuning at 113/150. Further gains would have come from nudging the
+  affordable_now / affordable_with_plan boundary on three specific samples
+  (06, 11, 21), where our headroom is high by 17.10, 599,355 and 31.05. That is
+  overfitting to individual requests, which the brief explicitly forbids.
+
+IMPLEMENTATION + REASON
+  Validator relaxation. Three of 250 rows paired affordable_with_plan with a
+  blank earliest date. That is legitimate: earliest_date_for_full_payment is
+  defined WITHOUT optional spending changes, so a plan that only works BECAUSE of
+  a spending change can leave it genuinely empty. The 25 samples never exercise
+  this. Accepted when a spending change is present, hard-failed otherwise.
+
+TEST RESULT
+  Full dataset: 250 rows written, validation PASS, zero exceptions, 0.7s.
+  CSV round-trip assertion passes (file reads back identical row-for-row).
+
+================================================================================
+DOCUMENTATION
+================================================================================
+
+IMPLEMENTATION
+  README.md, AI_JUDGE_NOTES.md, evaluation/usage_report.md, evaluation/usage.json,
+  log.txt, calibration_report.md, NOTES.md.
+
+NOTE ON THE USAGE REPORT
+  The final run used the checked-in evidence cache and made zero live API calls,
+  so the token and cost figures are zero. The API code path is real and exercised
+  by setting ANTHROPIC_API_KEY and dropping --offline. The 16 image amounts in
+  the cache were verified by opening every PNG rather than trusted from a model
+  response. This is stated in the report rather than papered over.
+
+================================================================================
+FINALISATION PASS
+================================================================================
+
+ACTION  Built code/analyse.py — per-request error analysis over all 25 samples.
+RESULT  18 of 21 informative samples OVER-predict headroom, only 3 under-predict.
+REASON  One-directional bias. In Phase 2 errors ran both ways; under the current
+        configuration they do not. That points at the set of projected streams,
+        not at noise.
+
+ACTION  Tested a hybrid cadence (monthly when the observed median gap is 26-34
+        days, observed gap otherwise). Motivation: sub-monthly cadences of 7, 14,
+        18 and 21 days appear in nearly every user, and projecting those monthly
+        would under-count outflow exactly as observed.
+RESULT  113 -> 93. Also tested pure median_gap_days: 93. REJECTED.
+REASON  The short-cadence series are many distinct descriptions covering one
+        category. A user has eight grocery descriptions each recurring monthly;
+        together they are weekly grocery spend. Monthly-per-description already
+        gives the right category aggregate. Stepping each at its own gap
+        double-counts. Kept `hybrid` in config.py, documented as tested and
+        rejected, so nobody repeats the experiment.
+
+ACTION  Added trimmed_mean and recent_median estimators. Swept 360 combinations
+        of estimator x lookback x min_occurrences x income estimator x horizon
+        inclusivity.
+RESULT  Ceiling 113/150. No estimator beat median. Nothing adopted.
+
+ACTION  Investigated the whole-number implied-outflow clue as instructed.
+RESULT  Real (16 of 21) but no mechanism found. Rent is 622.60 / 178.20 / 435.60,
+        utilities and groceries carry cents; only subscriptions and loan
+        instalments are whole. Restricting projection to whole-amount series
+        leaves request_22 at 28 against a required 157. Subsets do not close.
+        NOT IMPLEMENTED — forcing it would be fitting a coincidence.
+
+ACTION  Wrote tests/test_adversarial.py (36 tests): terminated salary, salary
+        transition, leave/return, one-off and gig income, injection in five
+        languages, blank amounts, multi-value and handwritten images, duplicates,
+        failed/cancelled/pending-credit/unrealised, FX, minimum balance,
+        reduce_to, formatting, 90-day boundary.
+RESULT  Found a real bug.
+
+BUG     amount_safe_to_pay rounded to nearest instead of flooring.
+RESULT  test_paying_the_safe_amount_never_breaches_the_minimum failed by 0.005 on
+        request_28 — half a cent ABOVE true headroom, breaking the minimum
+        balance guarantee at the trough.
+ACTION  Added floor_money() in state.py. Cap at requested_amount stays exact so
+        620.4 still returns 620.4, not 620.39.
+RESULT  Score unchanged at 113/150; the safety property now holds exactly.
+REASON  The labelled scoreboard cannot see this class of defect. The test can.
+
+BUG     Documentation claimed ~29 French messages.
+RESULT  Measured properly: 215 messages, 170 English, 45 Indonesian, ZERO French.
+        The Phase 1 figure was a false positive from matching the substrings
+        "vous" and "est " in a crude heuristic.
+ACTION  Corrected README.md, AI_JUDGE_NOTES.md, NOTES.md and log.txt, and added
+        a test that fails if the claim is reintroduced.
+REASON  A judge asking to see a French message would have found nothing.
+
+ACTION  Full dataset run from a clean invocation.
+RESULT  250 rows, header exact and ordered, no duplicate or missing ids, row
+        order matches requests.csv, enums valid, 0 <= safe <= requested holds,
+        no newlines in explanations, validator PASS, 0 exceptions, CSV
+        round-trip PASS, 0.7s.
+
+ACTION  Wrote FINAL_ERROR_ANALYSIS.md and FINAL_EVALUATION.md.
+
+DECISION  FROZEN AT 113/150.
+REASON    Per the stated rule: adopt a change only when a general rule improves
+          multiple requests. The cadence hypothesis was strong enough to test and
+          clearly wrong. Estimators are at a ceiling. The whole-number pattern
+          has no mechanism. The three status misses (06, 11, 21) are one failure
+          mode - headroom high by 17.10, 599,355 and 31.05 - and closing them by
+          nudging a threshold would gain up to twelve cells by overfitting three
+          requests. Not done.
+
+================================================================================
+FINAL SUBMISSION VERIFICATION PASS
+================================================================================
+
+ACTION  Built code/verify_submission.py - an INDEPENDENT auditor of output.csv.
+REASON  validate.py is part of the pipeline, so running it here would only prove
+        the pipeline agrees with itself. This script is written from the
+        challenge rules and re-derives everything it checks, including
+        re-simulating the minimum-balance constraint for all 250 rows.
+RESULT  28/28 checks PASS. Header exact, 250 rows, no duplicate or missing ids,
+        order preserved, enums valid, plan syntax and chronology valid, 58
+        instalment plans all match a real payment_option_id, 11 partial-payment
+        rows satisfy all five preconditions, 5 spending-change rows valid with
+        every reduce_to equal to the event's minimum_allowed_amount, safety
+        holds on every forecast day, CSV round-trip byte-identical.
+
+ACTION  Audited image evidence: chosen amount vs every candidate on the page.
+RESULT  3 of 16 extractions are provably NOT the largest number in the document
+        (image_01 Net Pay 4,365,000 over gross 4,780,800; image_02 Balance Due
+        100,000 over Total 200,000; image_12 33.50 over 40.00). The other 13 are
+        the largest because the total genuinely IS the line item the description
+        names. Reported honestly rather than claiming all 16 are semantic picks.
+
+ACTION  Ran seven prompt-injection strings through the message classifier,
+        including a delimiter break-out and a forged JSON payload, in English,
+        Indonesian and French.
+RESULT  0 of 7 moved money. All returned no_financial_effect with target=none
+        and new_amount=None.
+
+BUG     DOCUMENTATION/CODE MISMATCH. README claimed untrusted text is wrapped in
+        <untrusted_data>. The code actually uses <untrusted_message>. My first
+        verification probe searched for the wrong tag and appeared to show the
+        defence was missing entirely.
+ACTION  Corrected README.md and AI_JUDGE_NOTES.md to the real tag, and added
+        five structural tests: the delimiter is in the system prompt, it is in
+        the user turn actually sent, the vision prompt marks the image untrusted,
+        raw message_text never appears in solve.py or state.py, and a model reply
+        outside the closed enum is discarded.
+RESULT  125 passed, 1 skipped. Score unchanged at 113/150.
+REASON  A claim in the README that the code does not implement is worse than no
+        claim. Fixed the docs to match the code and locked it with tests.
+
+ACTION  Removed the prompt's claim that French messages appear.
+REASON  Measured: 215 messages, 170 English, 45 Indonesian, zero French.
+
+ACTION  Verified the Anthropic API request shape without a key by sending a
+        well-formed payload with a dummy key.
+RESULT  HTTP 401, not 400. Payload and headers are correct; only auth failed.
+        This is evidence the live path works, NOT evidence that calls were made.
+        Usage remains live_calls=0, tokens=0, cost=$0. Nothing fabricated.
+
+ACTION  Improved evaluation/usage_report.md to name the provider, both configured
+        models and the expected per-purpose call volume even when the run made
+        zero calls.
+REASON  A report reading only zeros tells a judge nothing about the design.
+
+ACTION  Filled two README gaps (explicit data-flow line, explicit 90-day horizon
+        statement) and added a 15-question interview quick-reference to
+        AI_JUDGE_NOTES.md.
+
+ACTION  Security scan of the whole submission and the built ZIP.
+RESULT  No API keys, tokens, passwords, private keys, .env files or credentials.
+
+DECISION  No solver change made in this pass. Per instruction, the 4/25
+          amount_safe_to_pay weakness was NOT chased. The only code changes were
+          the prompt/doc consistency fix and the new verification tooling.

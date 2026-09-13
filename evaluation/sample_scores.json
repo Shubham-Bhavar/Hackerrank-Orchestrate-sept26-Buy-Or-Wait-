@@ -1,0 +1,13 @@
+{
+  "per_column": {
+    "amount_safe_to_pay": 3,
+    "affordability_status": 19,
+    "recommended_payment_method": 22,
+    "payment_plan": 19,
+    "earliest_date_for_full_payment": 16,
+    "spending_changes_needed": 22
+  },
+  "n": 25,
+  "total_cells": 101,
+  "max_cells": 150
+}

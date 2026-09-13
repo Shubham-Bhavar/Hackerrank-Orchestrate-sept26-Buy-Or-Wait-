@@ -1,0 +1,146 @@
+{
+  "event_253": {
+    "image_id": "image_01",
+    "amount": 4365000,
+    "currency": "IDR",
+    "line_item": "Net Pay",
+    "alternatives": {"Total Earnings": 4780800, "Subtotal Earnings": 4780800, "Total Deductions": 415800},
+    "confidence": "high",
+    "note": "Event description is 'August 2019 net salary'. Payslip shows gross 4,780,800 and Net Pay 4,365,000. Net is the cash that reaches the account."
+  },
+  "event_1442": {
+    "image_id": "image_02",
+    "amount": 100000,
+    "currency": "INR",
+    "line_item": "Balance Due",
+    "alternatives": {"Total Amount to be Received": 200000, "Amount Received": 100000},
+    "confidence": "high",
+    "note": "Event description is 'Outstanding rent balance'. Half the 200,000 total was already received, leaving 100,000 outstanding."
+  },
+  "event_1545": {
+    "image_id": "image_03",
+    "amount": 41272.00,
+    "currency": "INR",
+    "line_item": "Net Amount",
+    "alternatives": {"Cash Paid": 41272.00},
+    "confidence": "high",
+    "note": "Bill of supply dated 27/02/2026, matching the event date."
+  },
+  "event_1700": {
+    "image_id": "image_04",
+    "amount": 2854.00,
+    "currency": "INR",
+    "line_item": "Item Bill",
+    "alternatives": {},
+    "confidence": "medium",
+    "note": "Screenshot is cropped below the Item Bill line; the delivery fee row is cut off and appears to be free. Thirteen line items sum to 2854.00, confirming the subtotal."
+  },
+  "event_1786": {
+    "image_id": "image_05",
+    "amount": 822.05,
+    "currency": "INR",
+    "line_item": "Amount due after 06-Feb-2026",
+    "alternatives": {"Amount due till 06-Feb-2026": 704.05, "This month's charges": 704.05},
+    "confidence": "medium",
+    "note": "Telecom bill splits by due date. The event settles 2026-02-09, after the 06-Feb cut-off, so the late figure applies. Conflict rule 4 (financially safer reading) also selects the larger debit."
+  },
+  "event_3051": {
+    "image_id": "image_06",
+    "amount": 1995.00,
+    "currency": "INR",
+    "line_item": "Total",
+    "alternatives": {"CGST": 47.49, "SGST": 47.49},
+    "confidence": "high",
+    "note": "GST invoice total, confirmed by the amount in words."
+  },
+  "event_3231": {
+    "image_id": "image_07",
+    "amount": 8528.10,
+    "currency": "INR",
+    "line_item": "Total",
+    "alternatives": {"Grand Total (RS)": 8528, "SubTotal": 8122.00},
+    "confidence": "medium",
+    "note": "Restaurant tax invoice dated 29-10-2025, matching the event date. The printed Grand Total is rounded to 8528; the tax-inclusive total is 8528.10."
+  },
+  "event_4535": {
+    "image_id": "image_08",
+    "amount": 15339.00,
+    "currency": "INR",
+    "line_item": "Total Amount Received",
+    "alternatives": {"Maintenance": 13880.00, "Club House Charges": 1050.00, "Infrastructure Expenses": 409.00},
+    "confidence": "high",
+    "note": "Three charge lines sum to 15,339.00, confirming the total."
+  },
+  "event_5170": {
+    "image_id": "image_09",
+    "amount": 723.00,
+    "currency": "INR",
+    "line_item": "Total Amount Received",
+    "alternatives": {"Charged Amount": 723.00},
+    "confidence": "high",
+    "note": "Water bill receipt, confirmed by the amount in words."
+  },
+  "event_6033": {
+    "image_id": "image_10",
+    "amount": 79679.26,
+    "currency": "INR",
+    "line_item": "Balance Due",
+    "alternatives": {"Total": 79679.26, "Sub Total": 72045.00},
+    "confidence": "high",
+    "note": "Total and Balance Due agree; confirmed by the amount in words. This is a pending debit, so it affects the forecast."
+  },
+  "event_6859": {
+    "image_id": "image_11",
+    "amount": 3650.00,
+    "currency": "INR",
+    "line_item": "Balance",
+    "alternatives": {"Total Bill Amount": 3650.00, "Amount Payable": 3650.00, "Amount Paid": 0.00},
+    "confidence": "high",
+    "note": "Event description is 'Hospital bill payable'. Amount Paid is 0.00 so the full 3,650 is still outstanding. Scheduled debit, so it affects the forecast."
+  },
+  "event_7307": {
+    "image_id": "image_12",
+    "amount": 33.50,
+    "currency": "USD",
+    "line_item": "Total",
+    "alternatives": {"Cash Paid": 40.00, "Change": 6.50, "Subtotal": 33.50},
+    "confidence": "high",
+    "note": "Cash paid less change equals the 33.50 fare; the 40.00 tendered is not the cost."
+  },
+  "event_7941": {
+    "image_id": "image_13",
+    "amount": 2298.00,
+    "currency": "INR",
+    "line_item": "Total paid",
+    "alternatives": {"Item Total": 2298.00, "Delivery": 0},
+    "confidence": "high",
+    "note": "Two tote bags at 699 and 1,599 sum to 2,298; delivery free."
+  },
+  "event_9421": {
+    "image_id": "image_14",
+    "amount": 4543.00,
+    "currency": "INR",
+    "line_item": "TOTAL",
+    "alternatives": {},
+    "confidence": "medium",
+    "note": "Handwritten pharmacy receipt. The six handwritten line items (1500, 724, 796, 550, 303, 670) sum to exactly 4543, cross-validating the handwritten total."
+  },
+  "event_9806": {
+    "image_id": "image_15",
+    "amount": 9968.00,
+    "currency": "INR",
+    "line_item": "Grand Total (Total Incl Taxes)",
+    "alternatives": {"Taxable Value": 9124.00, "Total": 9512.00, "Airport Charges": 388.00},
+    "confidence": "high",
+    "note": "Airline invoice dated 07-Jun-2026, matching the event date. The tax-inclusive grand total is the amount charged."
+  },
+  "event_10521": {
+    "image_id": "image_16",
+    "amount": 393.22,
+    "currency": "INR",
+    "line_item": "Total",
+    "alternatives": {"Amount (energy)": 333.24, "CGST 9%": 29.99, "SGST 9%": 29.99},
+    "confidence": "high",
+    "note": "EV charging session on 03/09/2026 12:35 am, matching the event. Confirmed by the amount in words."
+  }
+}

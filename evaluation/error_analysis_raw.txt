@@ -1,0 +1,94 @@
+== per-request table ==
+request     cur         requested        exp_safe        got_safe  rel_err  status exp/got                              method exp/got                    
+request_01  ZAR         25,256.00       25,256.00       25,256.00    0.000  affordable_now/affordable_now               full_payment/full_payment         
+request_02  IDR     46,018,000.00   17,229,139.20   17,239,398.99    0.001  affordable_with_plan/affordable_with_plan   installments/installments         
+request_03  IDR      5,491,000.00      873,000.00    1,303,285.03    0.493  affordable_later/affordable_later           wait/wait                         
+request_04  IDR     12,693,000.00    8,401,800.00   11,846,010.76    0.410  affordable_later/affordable_later           wait/wait                         
+request_05  ZAR         15,488.00          737.00            0.00    1.000  not_affordable/not_affordable               not_recommended/not_recommended   
+request_06  EUR            620.40          603.30          620.40    0.028  affordable_with_plan/affordable_now         full_payment/full_payment         
+request_07  INR        197,400.00       87,170.56       98,466.96    0.130  affordable_with_plan/affordable_with_plan   installments/installments         
+request_08  EUR            996.60          284.57          384.49    0.351  affordable_later/affordable_later           wait/wait                         
+request_09  EUR            166.61          166.61          166.61    0.000  affordable_now/affordable_now               full_payment/full_payment         
+request_10  INR        266,700.00       12,700.00       81,916.61    5.450  not_affordable/not_affordable               not_recommended/not_recommended   
+request_11  IDR     13,110,000.00   12,510,645.00   13,110,000.00    0.048  affordable_with_plan/affordable_now         full_payment/full_payment         
+request_12  ZAR         65,164.00       65,164.00       65,164.00    0.000  affordable_with_plan/affordable_with_plan   installments/installments         
+request_13  EUR            941.60          433.40          889.69    1.053  affordable_later/affordable_later           wait/wait                         
+request_14  EUR          5,414.20          597.74            0.00    1.000  not_affordable/not_affordable               not_recommended/not_recommended   
+request_15  EUR          3,685.00           83.05          161.83    0.949  not_affordable/not_affordable               not_recommended/not_recommended   
+request_16  INR        122,500.00      122,500.00      122,500.00    0.000  affordable_now/affordable_now               full_payment/full_payment         
+request_17  INR        274,600.00      243,849.58      253,657.83    0.040  affordable_with_plan/affordable_with_plan   installments/installments         
+request_18  EUR          3,246.10          462.00          690.16    0.494  affordable_later/affordable_later           wait/wait                         
+request_19  INR         39,660.00       28,820.00       37,951.96    0.317  affordable_with_plan/affordable_with_plan   partial_payment/partial_payment   
+request_20  INR        303,700.00        5,400.00       12,050.47    1.232  not_affordable/not_affordable               not_recommended/not_recommended   
+request_21  USD          1,574.40        1,543.35        1,574.40    0.020  affordable_with_plan/affordable_now         full_payment/full_payment         
+request_22  EUR            731.50          475.46          506.11    0.064  affordable_with_plan/affordable_with_plan   installments/installments         
+request_23  ZAR         38,016.00        9,152.00       10,275.49    0.123  affordable_later/affordable_later           wait/wait                         
+request_24  INR        109,600.00       13,420.00       10,083.60    0.249  not_affordable/not_affordable               not_recommended/not_recommended   
+request_25  IDR     60,496,000.00    1,425,000.00    2,295,585.39    0.611  not_affordable/not_affordable               not_recommended/not_recommended   
+
+== forecast internals ==
+request              balance       minimum          inflow         outflow          troughworst       series f/v  cadences
+request_01            58,481        18,000          59,466          45,432          32,1892024-03-13  5/9         [7, 18, 21, 28, 29, 30, 31, 32, 42]
+request_02        60,383,889    29,158,400     128,250,000      62,786,762      17,239,3992025-08-13  5/8         [14, 20, 30, 35, 45]
+request_03         5,810,300     2,668,700      13,095,000       5,903,234       1,303,2852019-09-14  3/4         [20, 30, 31]
+request_04        52,206,950    30,686,600     114,570,000      86,000,376      11,846,0112024-06-13  4/12        [7, 18, 24, 28, 29, 30, 32, 35]
+request_05            46,475        13,100               0          34,347            -9722026-02-02  5/7         [30, 31, 32, 35, 42]
+request_06             1,942           800           4,323           2,756             6862026-01-14  4/14        [10, 14, 15, 18, 28, 30, 32, 38, 40, 45]
+request_07           218,946        93,000         447,000         223,347          98,4672024-09-13  4/4         [21, 30, 31, 32, 42]
+request_08             1,537           800           4,269           3,980             3842025-02-12  5/11        [7, 14, 18, 21, 30, 31, 32, 35]
+request_09             2,231           600           1,493           1,123           1,4682026-07-17  3/4         [13, 30]
+request_10           750,155       225,400         122,933         541,456          81,9172025-03-03  4/12        [7, 14, 18, 21, 24, 28, 30, 31, 32]
+request_11        63,531,795    34,140,600     116,280,000      47,898,543      13,425,0142025-05-16  4/5         [9, 28, 31]
+request_12           193,090        43,200               0          65,796          84,0942026-07-01  3/5         [10, 30, 31, 42]
+request_13             2,790         1,300           4,031           4,363             8902024-05-14  4/11        [7, 18, 21, 25, 28, 30, 31, 35, 42]
+request_14             3,932         2,200               0           5,154          -3,4222025-10-27  4/6         [10, 14, 30, 42]
+request_15             1,770         1,200           4,983           3,543             1622026-01-13  6/9         [18, 21, 28, 30, 35, 38, 42]
+request_16           362,370       122,400         519,000         549,923         148,5242023-09-13  5/10        [7, 14, 21, 30, 32, 35, 38]
+request_17           550,380       166,100         618,000         445,671         253,6582026-03-14  6/8         [10, 18, 28, 31, 35, 38]
+request_18             2,486         1,400           6,930           2,143             6902026-07-11  4/4         [28, 30, 35]
+request_19           199,545        92,800         393,000         295,049          37,9522024-09-14  5/7         [14, 21, 24, 30, 31, 35]
+request_20           102,609        64,500         324,000         145,639          12,0502026-02-13  5/5         [30, 31, 40]
+request_21             3,911         1,800           6,768           3,826           1,6722026-04-12  4/5         [30, 31, 35, 40]
+request_22             1,132           500           1,848           1,079             5062024-12-14  5/7         [18, 21, 30, 31, 35, 38]
+request_23            51,958        27,000         137,280         111,560          10,2752025-05-14  5/6         [21, 30, 31, 38]
+request_24            85,045        51,000         183,000         156,534          10,0842026-01-14  6/15        [7, 10, 15, 20, 25, 28, 30, 32, 45]
+request_25        32,063,050    23,379,100      85,499,982      54,391,974       2,295,5852024-03-14  5/13        [10, 15, 20, 24, 25, 28, 30, 31, 35, 45]
+
+== implied outflow fingerprint (label arithmetic, config-free) ==
+request_02       13,996,350.00     0.00
+request_03        2,268,600.00     0.00
+request_04       13,118,550.00     0.00
+request_05           32,638.10     0.10
+request_06              539.10     0.10
+request_07           38,775.00     0.00
+request_08              452.00    -0.00
+request_10          512,055.00     0.00
+request_11       16,880,550.00     0.00
+request_13            1,056.12     0.12
+request_14            1,134.00    -0.00
+request_15              487.00    -0.00
+request_17          140,430.00    -0.00
+request_18              624.00     0.00
+request_19           77,925.00     0.00
+request_20           32,709.05     0.05
+request_21              568.00     0.00
+request_22              157.00     0.00
+request_23           15,805.90    -0.10
+request_24           20,625.00     0.00
+request_25        7,258,950.00     0.00
+whole-number implied outflow: 16/21
+
+== grouped failure causes ==
+  A. capped and correct (clamp hides the forecast): 4
+      request_01, request_09, request_12, request_16
+  B. forecast too optimistic: we see no need for a spending change: 3
+      request_06, request_11, request_21
+  E. earliest date off while status is right: 4
+      request_03, request_07, request_18, request_22
+  F. safe amount off by more than 30%: 12
+      request_03, request_04, request_05, request_08, request_10, request_13, request_14, request_15, request_18, request_19, request_20, request_25
+  G. safe amount off by 30% or less (right shape, wrong precision): 9
+      request_02, request_06, request_07, request_11, request_17, request_21, request_22, request_23, request_24
+
+  over-predicting headroom:  18  (request_02, request_03, request_04, request_06, request_07, request_08, request_10, request_11, request_13, request_15, request_17, request_18, request_19, request_20, request_21, request_22, request_23, request_25)
+  under-predicting headroom: 3  (request_05, request_14, request_24)

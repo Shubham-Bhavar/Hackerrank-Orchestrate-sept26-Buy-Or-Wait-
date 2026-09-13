@@ -1,0 +1,13 @@
+{
+  "totals": {
+    "live_calls": 0,
+    "cache_hits": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "total_tokens": 0,
+    "cost_usd": 0,
+    "by_model": {},
+    "by_purpose": {}
+  },
+  "records": []
+}
